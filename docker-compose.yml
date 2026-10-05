@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: social
+      POSTGRES_USER: social
+      POSTGRES_PASSWORD: social
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U social -d social"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://social:social@db:5432/social
+      JWT_SECRET: replace-this-secret
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  pgdata:
+
